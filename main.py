@@ -1,7 +1,4 @@
-import wmi
+import ohm
 
-c = wmi.WMI()
-
-for os in c.Win32_OperatingSystem():
-    print(os.Caption)
-
+if __name__ == "__main__":
+    ohmwmi = ohm.init_ohm_wmi()
