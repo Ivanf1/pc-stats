@@ -1,10 +1,5 @@
 import serial
-from serial.tools import list_ports
 from multiprocessing import Process
-
-def get_serial_ports():
-    """Return a list of all serial ports found"""
-    return sorted(list_ports.comports())
 
 class EspSerialProcess(Process):
     def __init__(self, wmi_data_queue, port):
@@ -28,6 +23,5 @@ class EspSerialProcess(Process):
                     print(incoming)
                 except Exception as e:
                     print(e)
-                    pass
         except:
             return

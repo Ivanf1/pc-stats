@@ -17,55 +17,58 @@ def is_ohm_running(ohmwmi) -> bool:
     sensors = ohmwmi.Sensor()
     return False if not sensors else True
 
-def get_hardware(ohmwmi):
-    # get list of hardwares
+def get_update(ohmwmi, filter_function=None):
+    """Get new data from WMI"""
+    # TODO: let the user chose the query
     hardwares = ohmwmi.Hardware()
-    return hardwares
+    # TODO: let the user chose the query
+    sensors = ohmwmi.query("SELECT Parent, Name, SensorType, Value \
+                            FROM Sensor \
+                            WHERE (SensorType='Temperature' OR SensorType='Load') \
+                                AND (Parent LIKE '%cpu%' OR Parent LIKE '%gpu%')")
 
-def get_temperature_sensors(ohmwmi):
-    # get list of temperature sensors
-    sensors = ohmwmi.Sensor(["Name", "Parent", "Value", "Identifier"], SensorType="Temperature")
-    if not sensors:
-        print("OpenHardwareMonitor is not running.\nMake sure OpenHardwareMonitor is started with admin privileges.")
-        return []
-    return sensors
+    return _hardware_sensors_to_json(hardwares, sensors, filter_function)
 
-def get_update(ohmwmi):
-    """ get new data from WMI """
-    hardwares = ohmwmi.Hardware()
-    sensors = ohmwmi.Sensor(["Name", "Parent", "Value", "Identifier"], SensorType="Temperature")
-
-    return _hardware_sensors_to_json(hardwares, sensors)
-
-def _hardware_sensors_to_json(hardwares, sensors):
-    """Return a json with info about Hardware and associated sensors.
+def _hardware_sensors_to_json(hardwares, sensors, filter_function=None):
+    """Return a json with info about Hardware and associated sensors. \
+    You can pass a filter function to chose which sensors to add based on the name
     \nThe json will have this structure:\n
     [
+        {
+            "t":"GpuNvidia",
+            "n":"NVIDIA GeForce GTX 950M",
+            "i":"/nvidiagpu/0",
+            "s":[
+                {
+                    "n":"GPU Core",
+                    "t":"Temperature",
+                    "v":41.0
+                },
+                {
+                    "n":"GPU Core",
+                    "t":"Load",
+                    "v":6.0
+                }
+            ]
+        },
         {
             "t":"CPU",
             "n":"Intel Core i7-6700HQ",
             "i":"/intelcpu/0",
             "s":[
                 {
-                    "n":"CPU Core #1",
-                    "v":37.0
+                    "n":"CPU Total",
+                    "t":"Load",
+                    "v":5.27043342590332
                 },
                 {
-                    "n":"CPU Core #2",
-                    "v":47.0
-                },
-                {
-                    "n":"CPU Core #3",
-                    "v":40.0
-                },
-                {
-                    "n":"CPU Core #4",
-                    "v":38.0
+                    "n":"CPU Package",
+                    "t":"Temperature",
+                    "v":45.0
                 }
             ]
-        },\n
-        ...
-    ] 
+        }
+    ]
     """
 
     hardware_json = []
@@ -79,11 +82,17 @@ def _hardware_sensors_to_json(hardwares, sensors):
     
         for sensor in sensors:
             if sensor.Parent == hardware.Identifier:
-                hardware_json[current_idx]["s"].append({"n": sensor.Name, "v": sensor.Value})
+                # custom filtering
+                if filter_function:
+                    if filter_function(sensor.Name):
+                        hardware_json[current_idx]["s"].append({"n": sensor.Name, "t": sensor.SensorType, "v": sensor.Value})
+                else:
+                    hardware_json[current_idx]["s"].append({"n": sensor.Name, "t": sensor.SensorType, "v": sensor.Value})
+
 
         # if this current hardware has no sensors data
         # remove it from the array
         if not hardware_json[current_idx]["s"]:
             hardware_json.pop(current_idx)
-    
+
     return json.dumps(hardware_json, ensure_ascii=True)
