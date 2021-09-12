@@ -4,10 +4,6 @@ from multiprocessing import Queue
 import utils
 import polling
 import espserial
-import re
-
-def filter_wmi_data(sensor_name):
-    return True if re.search("^CPU Package$|^CPU Total$|^GPU Core$", sensor_name) else False
 
 if __name__ == "__main__":
     ports = utils.get_serial_ports()
@@ -20,7 +16,7 @@ if __name__ == "__main__":
         print(port.name, port.description)
 
     q = Queue()
-    poll_proc = polling.OhmPollingProcess(q, 5, filter_wmi_data)
+    poll_proc = polling.OhmPollingProcess(q, 5)
     espserial_proc = espserial.EspSerialProcess(q, "COM3")
 
     poll_proc.start()

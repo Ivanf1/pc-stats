@@ -17,7 +17,7 @@ def is_ohm_running(ohmwmi) -> bool:
     sensors = ohmwmi.Sensor()
     return False if not sensors else True
 
-def get_update(ohmwmi, filter_function=None):
+def get_update(ohmwmi):
     """Get new data from WMI"""
     # TODO: let the user chose the query
     hardwares = ohmwmi.Hardware()
@@ -27,9 +27,9 @@ def get_update(ohmwmi, filter_function=None):
                             WHERE (SensorType='Temperature' OR SensorType='Load') \
                                 AND (Parent LIKE '%cpu%' OR Parent LIKE '%gpu%')")
 
-    return _hardware_sensors_to_json(hardwares, sensors, filter_function)
+    return _hardware_sensors_to_json(hardwares, sensors)
 
-def _hardware_sensors_to_json(hardwares, sensors, filter_function=None):
+def _hardware_sensors_to_json(hardwares, sensors):
     """Return a json with info about Hardware and associated sensors. \
     You can pass a filter function to chose which sensors to add based on the name
     \nThe json will have this structure:\n
@@ -82,13 +82,7 @@ def _hardware_sensors_to_json(hardwares, sensors, filter_function=None):
     
         for sensor in sensors:
             if sensor.Parent == hardware.Identifier:
-                # custom filtering
-                if filter_function:
-                    if filter_function(sensor.Name):
-                        hardware_json[current_idx]["s"].append({"n": sensor.Name, "t": sensor.SensorType, "v": sensor.Value})
-                else:
-                    hardware_json[current_idx]["s"].append({"n": sensor.Name, "t": sensor.SensorType, "v": sensor.Value})
-
+                hardware_json[current_idx]["s"].append({"n": sensor.Name, "t": sensor.SensorType, "v": sensor.Value})
 
         # if this current hardware has no sensors data
         # remove it from the array

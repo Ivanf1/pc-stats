@@ -14,14 +14,14 @@ class EspSerialProcess(Process):
             self.serial_port.open()
             while self.serial_port.isOpen():
                 data = self.wmi_data_queue.get()
-                print(data)
+                # print(data)
                 self.serial_port.write(data.encode("ascii"))
                 self.serial_port.flush()
                 
-                try:
-                    incoming = self.serial_port.readline().decode("utf-8")
-                    print(incoming)
-                except Exception as e:
-                    print(e)
+                # try:
+                #     incoming = self.serial_port.readline().decode("utf-8")
+                #     print(incoming)
+                # except Exception as e:
+                #     print(e)
         except:
             return
