@@ -25,7 +25,7 @@ def get_update(ohmwmi):
     sensors = ohmwmi.query("SELECT Parent, Name, SensorType, Value \
                             FROM Sensor \
                             WHERE (SensorType='Temperature' OR SensorType='Load') \
-                                AND (Parent LIKE '%cpu%' OR Parent LIKE '%gpu%')")
+                                AND (Parent LIKE '%cpu%' OR Parent LIKE '%gpu%' OR Parent LIKE '%ram%')")
 
     return _hardware_sensors_to_json(hardwares, sensors)
 
